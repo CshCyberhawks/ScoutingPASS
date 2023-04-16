@@ -1,6 +1,15 @@
 import pandas as pd
 
-data = pd.read_excel('data.xlsx', sheet_name="Match Scouting Data")
+fileName = input("What file would you like to read from?\n")
+
+if fileName == "":
+    fileName = "data.xlsx"
+
+sheetName = input("Which sheet would you like to use?\n")
+if sheetName == "":
+    sheetName = "Match Scouting Data"
+
+data = pd.read_excel(fileName, sheet_name=sheetName)
 
 dictionaryOfData = {}
 
@@ -98,6 +107,7 @@ for key in dictionaryOfData:
 
         # tippy = matchData["tippy"] == 1 and -5 or matchData["tippy"] == 0 and 0 or 0
         swoPA = autoPts + teleopPts + autoBalance + teleopBalance + defensePts + diedTipped + tippy
+        print(swoPA)
         totals["swoPA"] = swoPA
 
     #averages
