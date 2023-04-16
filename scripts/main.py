@@ -29,13 +29,16 @@ for key in dictionaryOfData:
     avgs = {}
     count = 0
 
+    swoPACount = 0
+
     #SWO EPA
     for matchData in dictionaryOfData[key]:
-        autoPts = (matchData["autoHigh"].sum() * 6) + (matchData["autoMed"].sum() * 4) + (matchData["autoLow"].sum() * 2)
-        teleopPts = (matchData["teleopHigh"].sum() * 5) + (matchData["teleopMed"].sum() * 3) + (matchData["teleopLow"].sum() * 1)
+
+        autoPts = (matchData["autoHigh"].iloc[swoPACount] * 6) + (matchData["autoMed"].iloc[swoPACount] * 4) + (matchData["autoLow"].iloc[swoPACount] * 3)
+        teleopPts = (matchData["teleopHigh"].iloc[swoPACount] * 5) + (matchData["teleopMed"].iloc[swoPACount] * 3) + (matchData["teleopLow"].iloc[swoPACount] * 2)
         autoBalance = 0
 
-        match matchData["autoDocked"].sum():
+        match matchData["autoDocked"].iloc[swoPACount]:
             case "e":
                 autoBalance = 12
             case "d":
@@ -50,7 +53,7 @@ for key in dictionaryOfData:
                 autoBalance = 0
 
         teleopBalance = 0
-        match matchData["finalState"].sum():
+        match matchData["finalState"].iloc[swoPACount]:
             case "e":
                 teleopBalance = 5
             case "d":
@@ -62,17 +65,17 @@ for key in dictionaryOfData:
             case default:
                 teleopBalance = 0
 
-        teleopBalance *= matchData["numOfRobotsDocked"].sum()
+        teleopBalance *= matchData["numOfRobotsDocked"].iloc[swoPACount]
 
         # autoBalance = matchData["autoDocked"] == "e" and 12 or matchData["autoDocked"] == "d" and 10 or matchData["autoDocked"] == "f" and -5 or matchData["autoDocked"] == "x" and 0 or matchData["autoDocked"] == "p" and 2 or 0
         # teleopBalance = (matchData["finalState"] == "e" and 5 or matchData["finalState"] == "d" and 2 or matchData["finalState"] == "f" and -10 or matchData["finalState"] == "x" and 0 or 0) * matchData["numOfRobotsDocked"]
-        if matchData["dockingTime"].sum() <= 5:
+        if matchData["dockingTime"].iloc[swoPACount] <= 5:
             teleopBalance += 10
-        elif matchData["dockingTime"].sum() <= 15:
+        elif matchData["dockingTime"].iloc[swoPACount] <= 15:
             teleopBalance += 5
 
         defensePts = 0
-        match matchData["defenseRating"].sum():
+        match matchData["defenseRating"].iloc[swoPACount]:
             case "b":
                 defensePts = -5
             case "a":
@@ -87,7 +90,7 @@ for key in dictionaryOfData:
         # defensePts = matchData["defense"] == "b" and -5 or matchData["defense"] == "a" and 10 or matchData["defense"] == "e" and 20 or matchData["defense"] == "x" and 0 or 0
 
         diedTipped = 0
-        match matchData["diedOrTipped"].sum():
+        match matchData["diedOrTipped"].iloc[swoPACount]:
             case 1:
                 diedTipped = -10
             case 0:
@@ -97,7 +100,7 @@ for key in dictionaryOfData:
 
         # diedTipped = matchData["diedOrTipped"] == 1 and -10 or matchData["diedOrTipped"] == 0 and 0 or 0
         tippy = 0
-        match matchData["tippy"].sum():
+        match matchData["tippy"].iloc[swoPACount]:
             case 1:
                 tippy = -5
             case 0:
@@ -106,17 +109,41 @@ for key in dictionaryOfData:
                 tippy = 0
 
         # tippy = matchData["tippy"] == 1 and -5 or matchData["tippy"] == 0 and 0 or 0
+
         swoPA = autoPts + teleopPts + autoBalance + teleopBalance + defensePts + diedTipped + tippy
-        print(swoPA)
-        totals["swoPA"] = swoPA
+        # if key == 2875 and count == 0:
+        #     print("teleopMed: ")
+        #     print(matchData["teleopMed"].sum())
+        #     print("autoPts: ")
+        #     print(autoPts)
+        #     print("teleopPts: ")
+        #     print(teleopPts)
+        #     print("autoBalance: ")
+        #     print(autoBalance)
+        #     print("teleopBalance: ")
+        #     print(teleopBalance)
+        #     print("defensePts: ")
+        #     print(defensePts)
+        #     print("diedTipped: ")
+        #     print(diedTipped)
+        #     print("tippy: ")
+        #     print(tippy)
+        #
+        #     print(swoPA)
+
+        if "swoPA" not in totals:
+            totals["swoPA"] = swoPA
+        else:
+            totals["swoPA"] += swoPA
+        swoPACount += 1
 
     #averages
     for matchData in dictionaryOfData[key]:
         for column in columnsToAvg:
             if column not in totals:
-                totals[column] = dictionaryOfData[key][count][column].sum()
+                totals[column] = matchData[column].iloc[count]
             else:
-                totals[column] += dictionaryOfData[key][count][column].sum()
+                totals[column] += matchData[column].iloc[count]
         count += 1
     for total in totals:
         avgs[total] = totals[total] / count + 1
